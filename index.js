@@ -1,5 +1,6 @@
 const https = require('https');
 const crypto = require('crypto');
+const strategy = require('./strategy'); // Import the strategy module
 
 // OKX API credentials (replace with your actual credentials)
 const apiKey = '4be582e6-5df5-48da-b7ed-fd096c08463a'; // Replace with your API key
@@ -81,7 +82,7 @@ async function getBalance() {
   }
 }
 
-// Function to place a limit order
+// Function to place an order (market for simplicity, adapt as needed for limit/stop-loss)
 async function placeLimitOrder(instrumentId, side, size, price) {
   try {
     // Prepare the order details
@@ -89,7 +90,7 @@ async function placeLimitOrder(instrumentId, side, size, price) {
       instId: instrumentId,
       tdMode: 'cash', // Use 'simulated' for demo trading
       side: side,
-      ordType: 'limit',
+      ordType: 'market', // Changed to market order for immediate execution
       sz: size,
       px: price,
     };
@@ -119,10 +120,20 @@ async function getOpenOrders(instrumentId) {
   }
 }
 
-// Example usage:
-placeLimitOrder('BTC-USDT', 'buy', '0.001', '20000').then(() => {
-  console.log("order placed")
-  getOpenOrders('BTC-USDT');
-});
+// Trading Logic
+async function runStrategy() {
+  const instruments = ['BTC-USDT', 'XRP-USDT', 'HBAR-USDT'];
+  const tradeSize = '20'; // USDT
+
+  for (const instrumentId of instruments) {
+    try {
+      await strategy.runStrategy(instrumentId, tradeSize, sendRequest); // Pass tradeSize and sendRequest to the strategy
+    } catch (error) {
+      console.error(`Error processing signal for ${instrumentId}:`, error);
+    }
+  }
+}
+
+setInterval(runStrategy, 300000); // Run every 5 minutes (300000 ms)
 
 getBalance();
